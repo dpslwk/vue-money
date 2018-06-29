@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var version = exports.version = '0.0.1';
+var version = exports.version = '0.0.6';
 
 var Money = exports.Money = {
   install: function install(Vue, options) {
@@ -12,7 +12,15 @@ var Money = exports.Money = {
       symbol: options && options.symbol ? options.symbol : '$',
       format: options && options.format ? options.format : /%money%/,
       directive: options && options.directive ? options.directive : 'money-format',
-      global: options && options.global ? options.global : 'moneyFormat'
+      global: options && options.global ? options.global : 'moneyFormat',
+      filter: options && options.filter ? options.filter : 'money'
+    };
+
+    var moneyFormatFunction = function moneyFormatFunction(value) {
+      if (isNaN(value) || value === null) {
+        return value;
+      }
+      return Money.format(value.toFixed(config.places).toString(), config.symbol);
     };
 
     Vue.directive(config.directive, {
@@ -24,12 +32,10 @@ var Money = exports.Money = {
         el.innerHTML = Money.formatMoney(el, binding.value, config);
       }
     });
-    Vue.prototype['$' + config.global] = function (value) {
-      if (isNaN(value) || value === null) {
-        return value;
-      }
-      return Money.format(value.toFixed(config.places).toString(), config.symbol);
-    };
+
+    Vue.filter(config.filter, moneyFormatFunction);
+
+    Vue.prototype['$' + config.global] = moneyFormatFunction;
   },
   formatMoney: function formatMoney(el, value, _ref) {
     var places = _ref.places,

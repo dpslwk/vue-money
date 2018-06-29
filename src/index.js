@@ -1,4 +1,4 @@
-export const version = '0.0.5'
+export const version = '0.0.6'
 
 export const Money = {
   install: function (Vue, options) {
@@ -7,7 +7,15 @@ export const Money = {
       symbol: options && options.symbol ? options.symbol : '$',
       format: options && options.format ? options.format : /%money%/,
       directive: options && options.directive ? options.directive : 'money-format',
-      global: options && options.global ? options.global : 'moneyFormat'
+      global: options && options.global ? options.global : 'moneyFormat',
+      filter: options && options.filter ? options.filter : 'money',
+    }
+
+    const moneyFormatFunction = function (value) {
+      if (isNaN(value) || value === null) {
+        return value
+      }
+      return Money.format(value.toFixed(config.places).toString(), config.symbol)
     }
 
     Vue.directive(config.directive, {
@@ -19,12 +27,10 @@ export const Money = {
         el.innerHTML = Money.formatMoney(el, binding.value, config)
       }
     })
-    Vue.prototype[`$${config.global}`] = function (value) {
-      if (isNaN(value) || value === null) {
-        return value
-      }
-      return Money.format(value.toFixed(config.places).toString(), config.symbol)
-    }
+
+    Vue.filter(config.filter, moneyFormatFunction)
+
+    Vue.prototype[`$${config.global}`] = moneyFormatFunction
   },
   formatMoney: function (el, value, {places, format, symbol}) {
     let v = value
