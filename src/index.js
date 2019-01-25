@@ -72,8 +72,6 @@ export const Money = {
     }
 
     const moneyFormatFunction = function (value) {
-      console.log('the config is', config)
-
       if (isNaN(value) || value === null) {
         return value
       }
