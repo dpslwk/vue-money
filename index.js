@@ -87,22 +87,17 @@ var Money = exports.Money = {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     var config = {};
-
     for (var prop in _defaultConfig) {
       if (!_defaultConfig.hasOwnProperty(prop)) continue;
 
       config[prop] = options[prop] || _defaultConfig[prop];
     }
-
     var moneyFormatFunction = function moneyFormatFunction(value) {
-      console.log('the config is', config);
-
       if (isNaN(value) || value === null) {
         return value;
       }
       return _format(value.toFixed(config.places).toString(), config.symbol, config.thousandsSeparator, config.decimalSeparator);
     };
-
     var removeMoneyFormatFunction = function removeMoneyFormatFunction(value, defaultValue) {
       return _removeFormat({
         formattedString: value,
@@ -112,7 +107,6 @@ var Money = exports.Money = {
         defaultValue: defaultValue
       });
     };
-
     var component = {
       props: {
         value: {

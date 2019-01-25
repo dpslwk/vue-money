@@ -64,20 +64,17 @@ const _removeFormat = function ({formattedString, defaultValue = null, currencyS
 export const Money = {
   install: function (Vue, options = {}) {
     let config = {}
-
     for (let prop in _defaultConfig) {
       if (!_defaultConfig.hasOwnProperty(prop)) continue
 
       config[prop] = options[prop] || _defaultConfig[prop]
     }
-
     const moneyFormatFunction = function (value) {
       if (isNaN(value) || value === null) {
         return value
       }
       return _format(value.toFixed(config.places).toString(), config.symbol, config.thousandsSeparator, config.decimalSeparator)
     }
-
     const removeMoneyFormatFunction = function (value, defaultValue) {
       return _removeFormat({
         formattedString: value,
@@ -87,7 +84,6 @@ export const Money = {
         defaultValue: defaultValue
       })
     }
-
     const component = {
       props: {
         value: {
