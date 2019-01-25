@@ -1,67 +1,163 @@
-export const version = '0.0.6'
+export const version = '0.2.0'
+
+const _defaultConfig = {
+  places: 2,
+  symbol: '$',
+  decimalSeparator: '.',
+  thousandsSeparator: ',',
+  format: '/%money%/',
+  directive: 'money-format',
+  global: 'moneyFormat',
+  filter: 'money',
+  componentTag: 'money-input',
+  globalDirective: 'money'
+}
+
+const _formatMoney = function (el, value, {places, format, symbol}) {
+  let v = value
+  if (isNaN(v) || v === null) {
+    return
+  }
+  v = Number(v).toFixed(places).toString()
+  if (!el.dataset.text.match(format)) {
+    return _format(v, symbol)
+  }
+  return el.dataset.text.replace(format, _format(v, symbol))
+}
+
+const _format = function (value, currencySymbol, thousandsSeparator, decimalSeparator) {
+  let sign = ''
+  if (value.indexOf('-') === 0) {
+    sign = '-'
+    value = value.substr(1)
+  }
+  if (value.indexOf('.') < 0) {
+    return `${sign}${currencySymbol}${_formatInteger(value, thousandsSeparator)}${decimalSeparator}00`
+  }
+  const decimal = value.substr(value.indexOf('.')).replace('.', decimalSeparator)
+  const whole = value.substr(0, value.indexOf('.'))
+  return `${sign}${currencySymbol}${_formatInteger(whole, thousandsSeparator)}${decimal}`
+}
+
+const _formatInteger = function (value, thousandsSeparator) {
+  if (value.length > 3) {
+    const offset = value.length - 3
+    return _formatInteger(value.substr(0, offset)) + thousandsSeparator + value.substr(-3)
+  }
+  return value
+}
+/**
+ * Removes the format of a money String formatted by this same formatter
+ * @param {String!} formattedString - String to remove the format and return the number equivalent
+ * @param {Number?} defaultValue - Default value to evaluate an invalid String
+ * @param {String} currencySymbol - Currency symbol used
+ * @param {String} decimalSeparator - Symbol used to separate decimals
+ * @param {String} thousandsSeparator - Symbol used to separate thousands
+ * @private
+ */
+const _removeFormat = function ({formattedString, defaultValue = null, currencySymbol = _defaultConfig.symbol, decimalSeparator = _defaultConfig.decimalSeparator, thousandsSeparator = _defaultConfig.thousandsSeparator}) {
+  if (!formattedString) return defaultValue
+  const value = Number(formattedString.replace(new RegExp(`\\s|${thousandsSeparator}`, 'g'), '').replace(currencySymbol, ''))
+  return isNaN(value) ? defaultValue : value
+}
 
 export const Money = {
   install: function (Vue, options) {
-    const config = {
-      places: options && options.places ? options.places : 2,
-      symbol: options && options.symbol ? options.symbol : '$',
-      format: options && options.format ? options.format : /%money%/,
-      directive: options && options.directive ? options.directive : 'money-format',
-      global: options && options.global ? options.global : 'moneyFormat',
-      filter: options && options.filter ? options.filter : 'money',
-    }
+    let config = Object.assign({}, _defaultConfig, options)
 
     const moneyFormatFunction = function (value) {
       if (isNaN(value) || value === null) {
         return value
       }
-      return Money.format(value.toFixed(config.places).toString(), config.symbol)
+      return _format(value.toFixed(config.places).toString(), config.symbol, config.thousandsSeparator, config.decimalSeparator)
     }
+
+    const removeMoneyFormatFunction = function (value, defaultValue) {
+      return _removeFormat({
+        formattedString: value,
+        currencySymbol: config.currencySymbol,
+        thousandsSeparator: config.thousandsSeparator,
+        decimalSeparator: config.decimalSeparator,
+        defaultValue: defaultValue
+      })
+    }
+
+    const component = {
+      props: {
+        value: {
+          type: Number,
+          default: 0.0
+        },
+        defaultValue: {
+          type: Number,
+          default: 0.0
+        }
+      },
+      data () {
+        const vm = this
+
+        return {
+          formatted: vm.moneyFormatFunction(vm.value)
+        }
+      },
+      methods: {
+        moneyFormatFunction,
+        removeMoneyFormatFunction,
+        blur () {
+          const vm = this
+          const value = vm.removeMoneyFormatFunction(vm.formatted, vm.defaultValue)
+          vm.$emit('input', value)
+          vm.formatted = vm.moneyFormatFunction(value)
+        }
+      },
+      render (h) {
+        const vm = this
+        return h('input', {
+          directives: [
+            {
+              name: 'model',
+              rawName: 'v-model',
+              value: vm.formatted,
+              expression: 'formatted'
+            }
+          ],
+          attrs: {
+            type: 'text'
+          },
+          domProps: {
+            value: vm.formatted
+          },
+          on: {
+            blur: vm.blur,
+            input: function ($event) {
+              if ($event.target.composing) return
+
+              vm.formatted = $event.target.value
+            }
+          }
+        })
+      }
+    }
+
+    Vue.component(config.componentTag, component)
 
     Vue.directive(config.directive, {
       bind: function (el, binding, vnode, oldVnode) {
         el.dataset.text = el.innerHTML
-        el.innerHTML = Money.formatMoney(el, binding.value, config)
+        el.innerHTML = _formatMoney(el, binding.value, config)
       },
       update: function (el, binding, vnode, oldVnode) {
-        el.innerHTML = Money.formatMoney(el, binding.value, config)
+        el.innerHTML = _formatMoney(el, binding.value, config)
       }
     })
 
     Vue.filter(config.filter, moneyFormatFunction)
 
     Vue.prototype[`$${config.global}`] = moneyFormatFunction
-  },
-  formatMoney: function (el, value, {places, format, symbol}) {
-    let v = value
-    if (isNaN(v) || v === null) {
-      return
+    Vue.prototype[`$${config.globalDirective}`] = {
+      format: moneyFormatFunction,
+      removeFormat: removeMoneyFormatFunction
     }
-    v = Number(v).toFixed(places).toString()
-    if (!el.dataset.text.match(format)) {
-      return Money.format(v, symbol)
-    }
-    return el.dataset.text.replace(format, Money.format(v, symbol))
-  },
-  format: function (value, currencySymbol) {
-    let sign = ''
-    if (value.indexOf('-') === 0) {
-      sign = '-'
-      value = value.substr(1)
-    }
-    if (value.indexOf('.') < 0) {
-      return `${sign}${currencySymbol}${Money._formatInteger(value)}.00`
-    }
-    const decimal = value.substr(value.indexOf('.'))
-    const whole = value.substr(0, value.indexOf('.'))
-    return `${sign}${currencySymbol}${Money._formatInteger(whole)}${decimal}`
-  },
-  _formatInteger: function (value) {
-    if (value.length > 3) {
-      const offset = value.length - 3
-      return Money._formatInteger(value.substr(0, offset)) + ',' + value.substr(-3)
-    }
-    return value
   }
 }
 

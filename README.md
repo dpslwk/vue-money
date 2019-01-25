@@ -19,11 +19,16 @@ Vue.use(Money, config)
 Where `config` can be: 
 ```javascript
 const config = {
-  places: 2,
-  symbol: '$',
-  format: /%money%/,
-  directive: 'money-format',
-  global: 'moneyFormat'
+    places: 2,
+    symbol: '$',
+    decimalSeparator: '.',
+    thousandsSeparator: ',',
+    format: '/%money%/',
+    directive: 'money-format',
+    global: 'moneyFormat', // Will be deprecated for next release
+    filter: 'money',
+    componentTag: 'money-input',
+    globalDirective: 'money'
 }
 ```
 
@@ -32,7 +37,36 @@ This will make the plugin available via the directive `v-money-format` or the gl
 
 ## Usage:
 
-**Directive mode**:
+### Global 
+
+You can access the format utilities through `vm.$money` (or the `globalDirective` value set in the config options).
+
+This will let you use two methods:
+
+#### `format(value)`
+
+Receives the number to format
+
+##### `removeFormat(formattedString, defaultValue)`
+
+Receives the String to remove format and a default value in case the string can't be evaluated.
+
+### Input component
+
+Now the plugin comes with an input component that can be used as:
+
+```vue
+<template>
+    <money-input v-model=""/>
+</template>
+```
+
+This will format the value `@blur` and emit the numeric value
+
+> You can change the name of the component through the `componentTag` config parameter.
+
+
+### Directive mode:
 
 ```html
 <p v-money-format="value"></p>
