@@ -13,16 +13,16 @@ const _defaultConfig = {
   globalDirective: 'money'
 }
 
-const _formatMoney = function (el, value, {places, format, symbol}) {
+const _formatMoney = function (el, value, {places, format, symbol, thousandsSeparator, decimalSeparator}) {
   let v = value
   if (isNaN(v) || v === null) {
     return
   }
   v = Number(v).toFixed(places).toString()
   if (!el.dataset.text.match(format)) {
-    return _format(v, symbol)
+    return _format(v, symbol, thousandsSeparator, decimalSeparator)
   }
-  return el.dataset.text.replace(format, _format(v, symbol))
+  return el.dataset.text.replace(format, _format(v, symbol, thousandsSeparator, decimalSeparator))
 }
 
 const _format = function (value, currencySymbol, thousandsSeparator, decimalSeparator) {
@@ -62,10 +62,18 @@ const _removeFormat = function ({formattedString, defaultValue = null, currencyS
 }
 
 export const Money = {
-  install: function (Vue, options) {
-    let config = Object.assign({}, _defaultConfig, options)
+  install: function (Vue, options = {}) {
+    let config = {}
+
+    for (let prop in _defaultConfig) {
+      if (!_defaultConfig.hasOwnProperty(prop)) continue
+
+      config[prop] = options[prop] || _defaultConfig[prop]
+    }
 
     const moneyFormatFunction = function (value) {
+      console.log('the config is', config)
+
       if (isNaN(value) || value === null) {
         return value
       }

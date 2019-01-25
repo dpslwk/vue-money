@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var version = exports.version = '0.1.0';
+var version = exports.version = '0.2.0';
 
 var _defaultConfig = {
   places: 2,
@@ -21,7 +21,9 @@ var _defaultConfig = {
 var _formatMoney = function _formatMoney(el, value, _ref) {
   var places = _ref.places,
       format = _ref.format,
-      symbol = _ref.symbol;
+      symbol = _ref.symbol,
+      thousandsSeparator = _ref.thousandsSeparator,
+      decimalSeparator = _ref.decimalSeparator;
 
   var v = value;
   if (isNaN(v) || v === null) {
@@ -29,9 +31,9 @@ var _formatMoney = function _formatMoney(el, value, _ref) {
   }
   v = Number(v).toFixed(places).toString();
   if (!el.dataset.text.match(format)) {
-    return _format(v, symbol);
+    return _format(v, symbol, thousandsSeparator, decimalSeparator);
   }
-  return el.dataset.text.replace(format, _format(v, symbol));
+  return el.dataset.text.replace(format, _format(v, symbol, thousandsSeparator, decimalSeparator));
 };
 
 var _format = function _format(value, currencySymbol, thousandsSeparator, decimalSeparator) {
@@ -81,10 +83,20 @@ var _removeFormat = function _removeFormat(_ref2) {
 };
 
 var Money = exports.Money = {
-  install: function install(Vue, options) {
-    var config = Object.assign({}, _defaultConfig, options);
+  install: function install(Vue) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+    var config = {};
+
+    for (var prop in _defaultConfig) {
+      if (!_defaultConfig.hasOwnProperty(prop)) continue;
+
+      config[prop] = options[prop] || _defaultConfig[prop];
+    }
 
     var moneyFormatFunction = function moneyFormatFunction(value) {
+      console.log('the config is', config);
+
       if (isNaN(value) || value === null) {
         return value;
       }
