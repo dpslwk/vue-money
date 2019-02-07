@@ -155,7 +155,9 @@ var Money = exports.Money = {
             blur: vm.blur,
             input: function input($event) {
               if ($event.target.composing) return;
-
+              // Emit the value on the spot, format visually later
+              var value = vm.removeMoneyFormatFunction($event.target.value, vm.defaultValue);
+              vm.$emit('input', value);
               vm.formatted = $event.target.value;
             }
           }

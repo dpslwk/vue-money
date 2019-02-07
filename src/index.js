@@ -133,7 +133,9 @@ export const Money = {
             blur: vm.blur,
             input: function ($event) {
               if ($event.target.composing) return
-
+              // Emit the value on the spot, format visually later
+              const value = vm.removeMoneyFormatFunction($event.target.value, vm.defaultValue)
+              vm.$emit('input', value)
               vm.formatted = $event.target.value
             }
           }
