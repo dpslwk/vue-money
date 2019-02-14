@@ -53,7 +53,7 @@ var _format = function _format(value, currencySymbol, thousandsSeparator, decima
 var _formatInteger = function _formatInteger(value, thousandsSeparator) {
   if (value.length > 3) {
     var offset = value.length - 3;
-    return _formatInteger(value.substr(0, offset)) + thousandsSeparator + value.substr(-3);
+    return _formatInteger(value.substr(0, offset), thousandsSeparator) + thousandsSeparator + value.substr(-3);
   }
   return value;
 };
@@ -136,6 +136,12 @@ var Money = exports.Money = {
           vm.formatted = vm.moneyFormatFunction(value);
         }
       },
+      watch: {
+        value: function value(nv, ov) {
+          var vm = this;
+          vm.formatted = vm.moneyFormatFunction(nv);
+        }
+      },
       render: function render(h) {
         var vm = this;
         return h('input', {
@@ -159,6 +165,9 @@ var Money = exports.Money = {
               var value = vm.removeMoneyFormatFunction($event.target.value, vm.defaultValue);
               vm.$emit('input', value);
               vm.formatted = $event.target.value;
+            },
+            keyup: function keyup($event) {
+              console.log($event.target.selectionStart);
             }
           }
         });

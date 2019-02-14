@@ -42,7 +42,7 @@ const _format = function (value, currencySymbol, thousandsSeparator, decimalSepa
 const _formatInteger = function (value, thousandsSeparator) {
   if (value.length > 3) {
     const offset = value.length - 3
-    return _formatInteger(value.substr(0, offset)) + thousandsSeparator + value.substr(-3)
+    return _formatInteger(value.substr(0, offset), thousandsSeparator) + thousandsSeparator + value.substr(-3)
   }
   return value
 }
@@ -112,6 +112,12 @@ export const Money = {
           vm.formatted = vm.moneyFormatFunction(value)
         }
       },
+      watch: {
+        value (nv, ov) {
+          const vm = this
+          vm.formatted = vm.moneyFormatFunction(nv)
+        }
+      },
       render (h) {
         const vm = this
         return h('input', {
@@ -137,6 +143,9 @@ export const Money = {
               const value = vm.removeMoneyFormatFunction($event.target.value, vm.defaultValue)
               vm.$emit('input', value)
               vm.formatted = $event.target.value
+            },
+            keyup: function ($event) {
+              console.log($event.target.selectionStart)
             }
           }
         })
