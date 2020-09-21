@@ -1,4 +1,4 @@
-export const version = '0.2.0'
+export const version = '0.4.2'
 
 const _defaultConfig = {
   places: 2,
@@ -69,11 +69,11 @@ export const Money = {
 
       config[prop] = options[prop] || _defaultConfig[prop]
     }
-    const moneyFormatFunction = function (value) {
+    const moneyFormatFunction = function (value, places = null, currencySymbol = null, thousandsSeparator = null, decimalSeparator = null) {
       if (isNaN(value) || value === null) {
         return value
       }
-      return _format(value.toFixed(config.places).toString(), config.symbol, config.thousandsSeparator, config.decimalSeparator)
+      return _format(value.toFixed(places ?? config.places).toString(), currencySymbol ?? config.symbol, thousandsSeparator ?? config.thousandsSeparator, decimalSeparator ?? config.decimalSeparator)
     }
     const removeMoneyFormatFunction = function (value, defaultValue) {
       return _removeFormat({
